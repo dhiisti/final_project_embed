@@ -93,21 +93,21 @@ void plot(byte x, byte y, byte val)
     byte address;
     if (x >= 0 && x <= 7)
     {
-        address = 0;
+        address = 3;
     }
     if (x >= 8 && x <= 15)
     {
-        address = 1;
+        address = 2;
         x = x - 8;
     }
     if (x >= 16 && x <= 23)
     {
-        address = 2;
+        address = 1;
         x = x - 16;
     }
     if (x >= 24 && x <= 31)
     {
-        address = 3;
+        address = 0;
         x = x - 24;
     }
 
@@ -222,13 +222,13 @@ void small_mode()
             return;
         }
 
-        if (button_C.uniquePress())
+        if (button_D.uniquePress())
         {
             up_intensity();
             return;
         }
 
-        if (button_D.uniquePress())
+        if (button_C.uniquePress())
         {
             down_intensity();
             return;
@@ -365,45 +365,78 @@ void display_date()
     fade_down();
 }
 
+//ganti mode
+void switch_mode()
+{
+    //remember mode we are in. We use this value if we go into settings mode, so we can change back from settings mode (6) to whatever mode we were in.
+    old_mode = clock_mode;
+
+    char *modes[] = {
+        "Clock", "Set Time", "Set Date"};
+
+    byte next_clock_mode;
+    byte firstrun = 1;
+
+    //loop waiting for button (timeout after 35 loops to return to mode X)
+    for (int count = 0; count < 35; count++)
+    {
+        if (button_A.uniquePress() || firstrun == 1)
+        {
+            count = 0;
+            cls();
+
+            if (firstrun == 0)
+            {
+                clock_mode++;
+            }
+            if (clock_mode > NUM_DISPLAY_MODES + 1)
+            {
+                clock_mode = 0;
+            }
+
+            //print arrown and current clock_mode name on line one and print next clock_mode name on line two
+            char str_top[9];
+
+            //strcpy (str_top, "-");
+            strcpy(str_top, modes[clock_mode]);
+
+            next_clock_mode = clock_mode + 1;
+            if (next_clock_mode > NUM_DISPLAY_MODES + 1)
+            {
+                next_clock_mode = 0;
+            }
+
+            byte i = 0;
+            while (str_top[i])
+            {
+                tiny_font(i * 4, 1, str_top[i]);
+                i++;
+            }
+            firstrun = 0;
+        }
+        delay(50);
+    }
+}
+
 //ganti intensitas
 void up_intensity()
 {
-    cls();
     byte i = 0;
-    char text[7] = "Bright";
-    while (text[i])
-    {
-        tiny_font((i * 4) + 4, 0, text[i]);
-        i++;
-    }
 
     //wait for button input
-    while (!button_C.uniquePress())
+    while (!button_A.uniquePress())
     {
-
-        levelbar(0, 6, (intensity * 2) + 2, 2); //display the intensity level as a bar
         while (button_D.isPressed())
         {
             if (intensity == 15)
             {
                 intensity = 0;
-                cls();
             }
             else
             {
                 intensity++;
             }
 
-            i = 0;
-            while (text[i])
-            {
-                tiny_font((i * 4) + 4, 0, text[i]);
-                i++;
-            }
-
-            //display the intensity level as a bar
-            levelbar(0, 6, (intensity * 2) + 2, 2);
-
             //change the brightness setting on the displays
             for (byte address = 0; address < 4; address++)
             {
@@ -411,45 +444,30 @@ void up_intensity()
             }
             delay(150);
         }
+
+        if (button_C.uniquePress())
+        {
+            down_intensity();
+            return;
+        }
     }
 }
+
 void down_intensity()
 {
-    cls();
     byte i = 0;
-    char text[7] = "Bright";
-    while (text[i])
+    while (!button_A.uniquePress())
     {
-        tiny_font((i * 4) + 4, 0, text[i]);
-        i++;
-    }
-
-    //wait for button input
-    while (!button_D.uniquePress())
-    {
-
-        levelbar(0, 6, (intensity * 2) + 2, 2); //display the intensity level as a bar
-        while (button_D.isPressed())
+        while (button_C.isPressed())
         {
-            if (intensity == 0)
-            {
-                intensity = 1;
-                cls();
-            }
-            else
+            if (intensity > 0)
             {
                 intensity--;
             }
-
-            i = 0;
-            while (text[i])
+            else
             {
-                tiny_font((i * 4) + 4, 0, text[i]);
-                i--;
+                intensity = 15;
             }
-
-            //display the intensity level as a bar
-            levelbar(0, 6, (intensity * 2) + 2, 2);
 
             //change the brightness setting on the displays
             for (byte address = 0; address < 4; address++)
@@ -457,18 +475,6 @@ void down_intensity()
                 lc.setIntensity(address, intensity);
             }
             delay(150);
-        }
-    }
-}
-
-// display a horizontal bar on the screen at offset xposr by ypos with height and width of xbar, ybar
-void levelbar(byte xpos, byte ypos, byte xbar, byte ybar)
-{
-    for (byte x = 0; x < xbar; x++)
-    {
-        for (byte y = 0; y <= ybar; y++)
-        {
-            plot(x + xpos, y + ypos, 1);
         }
     }
 }
@@ -477,11 +483,12 @@ void levelbar(byte xpos, byte ypos, byte xbar, byte ybar)
 //dislpay menu to change the clock settings
 void set_time()
 {
+    cls();
     char *set[] = {"Hour", "Min", "Scnd"};
 
     byte next_set_mode;
     byte firstrun = 1;
-    
+
     for (int count = 0; count < 35; count++)
     {
         if (button_B.uniquePress() || firstrun == 1)
@@ -493,7 +500,7 @@ void set_time()
             {
                 set_mode++;
             }
-            if (set_mode > NUM_SETTING_MODES + 1)
+            if (set_mode > NUM_DISPLAY_MODES + 1)
             {
                 set_mode = 0;
             }
@@ -505,7 +512,7 @@ void set_time()
             strcpy(str_top, set[set_mode]);
 
             next_set_mode = set_mode + 1;
-            if (next_set_mode > NUM_SETTING_MODES + 1)
+            if (next_set_mode > NUM_DISPLAY_MODES + 1)
             {
                 next_set_mode = 0;
             }
@@ -521,6 +528,7 @@ void set_time()
         delay(50);
     }
 
+    // cls();
     switch (set_mode)
     {
     case 0:
@@ -532,17 +540,13 @@ void set_time()
     case 2:
         secs_mode();
         break;
-    
-    case 3:
-        // secs_mode();
-        break;
     }
 
+    clock_mode = old_mode;
 }
 
 void hour_mode()
 {
-    cls();
     get_time();
     byte set_scnd = rtc[0];
     byte set_min = rtc[1];
@@ -553,7 +557,7 @@ void hour_mode()
 
     set_hr = rtc[2];
     char buffer[5] = "    ";
-    itoa(set_hr, buffer, 10);
+    itoa(set_min, buffer, 10);
     tiny_font(0, 1, buffer[0]);
     tiny_font(4, 1, buffer[1]);
     tiny_font(8, 1, buffer[2]);
@@ -576,12 +580,13 @@ void hour_mode()
             tiny_font(4, 1, buffer[1]);
             tiny_font(8, 1, buffer[2]);
             tiny_font(12, 1, buffer[3]);
-            delay(50);
+            delay(150);
         }
         ds1307.adjust(DateTime(set_yr, set_mnth, set_date, set_hr, set_min, set_scnd));
     }
 
     fade_down();
+    clock_mode = old_mode;
 }
 
 void min_mode()
@@ -625,6 +630,7 @@ void min_mode()
     }
 
     fade_down();
+    clock_mode = old_mode;
 }
 
 void secs_mode()
@@ -646,6 +652,7 @@ void secs_mode()
     tiny_font(4, 1, buffer[1]);
     tiny_font(8, 1, buffer[2]);
     tiny_font(12, 1, buffer[3]);
+
     while (!button_A.uniquePress())
     {
         while (button_B.isPressed())
@@ -668,8 +675,9 @@ void secs_mode()
         }
         ds1307.adjust(DateTime(set_yr, set_mnth, set_date, set_hr, set_min, set_secs));
     }
-
+    
     fade_down();
+    clock_mode = old_mode;
 }
 
 //set date time
@@ -677,7 +685,7 @@ void set_datetime()
 {
     //remember mode we are in. We use this value if we go into settings mode, so we can change back from settings mode (6) to whatever mode we were in.
     old_set_mode = set_mode;
-
+    cls();
     char *set[] = {
         "Day", "Month", "Year"};
 
@@ -736,6 +744,8 @@ void set_datetime()
         year_mode();
         break;
     }
+
+    clock_mode = old_mode;
 }
 
 void day_mode()
@@ -864,59 +874,6 @@ void year_mode()
     }
 
     fade_down();
-}
-
-//ganti mode
-void switch_mode()
-{
-    //remember mode we are in. We use this value if we go into settings mode, so we can change back from settings mode (6) to whatever mode we were in.
-    old_mode = clock_mode;
-
-    char *modes[] = {
-        "Clock", "Set Time", "Set Date"};
-
-    byte next_clock_mode;
-    byte firstrun = 1;
-
-    //loop waiting for button (timeout after 35 loops to return to mode X)
-    for (int count = 0; count < 35; count++)
-    {
-        if (button_A.uniquePress() || firstrun == 1)
-        {
-            count = 0;
-            cls();
-
-            if (firstrun == 0)
-            {
-                clock_mode++;
-            }
-            if (clock_mode > NUM_DISPLAY_MODES + 1)
-            {
-                clock_mode = 0;
-            }
-
-            //print arrown and current clock_mode name on line one and print next clock_mode name on line two
-            char str_top[9];
-
-            //strcpy (str_top, "-");
-            strcpy(str_top, modes[clock_mode]);
-
-            next_clock_mode = clock_mode + 1;
-            if (next_clock_mode > NUM_DISPLAY_MODES + 1)
-            {
-                next_clock_mode = 0;
-            }
-
-            byte i = 0;
-            while (str_top[i])
-            {
-                tiny_font(i * 4, 1, str_top[i]);
-                i++;
-            }
-            firstrun = 0;
-        }
-        delay(50);
-    }
 }
 
 void get_time()
