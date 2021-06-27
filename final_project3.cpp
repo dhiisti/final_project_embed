@@ -255,7 +255,7 @@ void small_mode()
         }
 
         //ganti tanggal untuk setiap 10 detik
-        if (secs % 10 == 0)
+        if (secs == 10 || secs == 25 || secs == 40 || secs == 55)
         {
             display_date();
             return;
@@ -333,6 +333,24 @@ void display_date()
         "Jan", "Feb", "Mar", "Apr", "Mei", "Jun",
         "Jul", "Agu", "Sep", "Okt", "Nov", "Des"};
 
+    if (button_A.uniquePress())
+    {
+        switch_mode();
+        return;
+    }
+
+    if (button_D.uniquePress())
+    {
+        up_intensity();
+        return;
+    }
+
+    if (button_C.uniquePress())
+    {
+        down_intensity();
+        return;
+    }
+
     //print tanggal
     char buffer[3];
     itoa(date, buffer, 10);
@@ -372,7 +390,7 @@ void switch_mode()
     old_mode = clock_mode;
 
     char *modes[] = {
-        "Clock", "Set Time", "Set Date"};
+        "Jam", "Set Jam", "Set Tggl"};
 
     byte next_clock_mode;
     byte firstrun = 1;
@@ -484,7 +502,7 @@ void down_intensity()
 void set_time()
 {
     cls();
-    char *set[] = {"Hour", "Min", "Scnd"};
+    char *set[] = {"Jam", "Menit", "Detik"};
 
     byte next_set_mode;
     byte firstrun = 1;
@@ -555,16 +573,17 @@ void hour_mode()
     byte set_mnth = rtc[5];
     int set_yr = rtc[6];
 
+    cls();
     set_hr = rtc[2];
     char buffer[5] = "    ";
-    itoa(set_min, buffer, 10);
+    itoa(set_hr, buffer, 10);
     tiny_font(0, 1, buffer[0]);
     tiny_font(4, 1, buffer[1]);
     tiny_font(8, 1, buffer[2]);
     tiny_font(12, 1, buffer[3]);
     while (!button_A.uniquePress())
     {
-        while (button_B.isPressed())
+        while (button_D.isPressed())
         {
             if (set_hr < 23)
             {
@@ -573,6 +592,24 @@ void hour_mode()
             else
             {
                 set_hr = 0;
+            }
+            //print the new value
+            itoa(set_hr, buffer, 10);
+            tiny_font(0, 1, buffer[0]);
+            tiny_font(4, 1, buffer[1]);
+            tiny_font(8, 1, buffer[2]);
+            tiny_font(12, 1, buffer[3]);
+            delay(150);
+        }
+        while (button_C.isPressed())
+        {
+            if (set_hr > 0)
+            {
+                set_hr--;
+            }
+            else
+            {
+                set_hr = 23;
             }
             //print the new value
             itoa(set_hr, buffer, 10);
@@ -599,6 +636,7 @@ void min_mode()
     byte set_mnth = rtc[5];
     int set_yr = rtc[6];
 
+    cls();
     set_min = rtc[1];
     char buffer[5] = "    ";
     itoa(set_min, buffer, 10);
@@ -608,7 +646,7 @@ void min_mode()
     tiny_font(12, 1, buffer[3]);
     while (!button_A.uniquePress())
     {
-        while (button_B.isPressed())
+        while (button_D.isPressed())
         {
             if (set_min < 59)
             {
@@ -617,6 +655,24 @@ void min_mode()
             else
             {
                 set_min = 0;
+            }
+            //print the new value
+            itoa(set_min, buffer, 10);
+            tiny_font(0, 1, buffer[0]);
+            tiny_font(4, 1, buffer[1]);
+            tiny_font(8, 1, buffer[2]);
+            tiny_font(12, 1, buffer[3]);
+            delay(150);
+        }
+        while (button_C.isPressed())
+        {
+            if (set_min > 0)
+            {
+                set_min--;
+            }
+            else
+            {
+                set_min = 59;
             }
             //print the new value
             itoa(set_min, buffer, 10);
@@ -644,7 +700,7 @@ void secs_mode()
     int set_yr = rtc[6];
 
     get_time();
-
+    cls();
     set_secs = rtc[0];
     char buffer[5] = "    ";
     itoa(set_secs, buffer, 10);
@@ -655,7 +711,7 @@ void secs_mode()
 
     while (!button_A.uniquePress())
     {
-        while (button_B.isPressed())
+        while (button_D.isPressed())
         {
             if (set_secs < 59)
             {
@@ -673,9 +729,27 @@ void secs_mode()
             tiny_font(12, 1, buffer[3]);
             delay(150);
         }
+        while (button_C.isPressed())
+        {
+            if (set_secs > 0)
+            {
+                set_secs--;
+            }
+            else
+            {
+                set_secs = 59;
+            }
+            //print the new value
+            itoa(set_secs, buffer, 10);
+            tiny_font(0, 1, buffer[0]);
+            tiny_font(4, 1, buffer[1]);
+            tiny_font(8, 1, buffer[2]);
+            tiny_font(12, 1, buffer[3]);
+            delay(150);
+        }
         ds1307.adjust(DateTime(set_yr, set_mnth, set_date, set_hr, set_min, set_secs));
     }
-    
+
     fade_down();
     clock_mode = old_mode;
 }
@@ -687,7 +761,7 @@ void set_datetime()
     old_set_mode = set_mode;
     cls();
     char *set[] = {
-        "Day", "Month", "Year"};
+        "Hari", "Bulan", "Tahun"};
 
     byte next_set_mode;
     byte firstrun = 1;
@@ -758,6 +832,7 @@ void day_mode()
     byte set_mnth = rtc[5];
     int set_yr = rtc[6];
 
+    cls();
     set_date = rtc[4];
     char buffer[5] = "    ";
     itoa(set_date, buffer, 10);
@@ -767,7 +842,7 @@ void day_mode()
     tiny_font(12, 1, buffer[3]);
     while (!button_A.uniquePress())
     {
-        while (button_B.isPressed())
+        while (button_D.isPressed())
         {
             if (set_date < 31)
             {
@@ -776,6 +851,24 @@ void day_mode()
             else
             {
                 set_date = 1;
+            }
+            //print the new value
+            itoa(set_date, buffer, 10);
+            tiny_font(0, 1, buffer[0]);
+            tiny_font(4, 1, buffer[1]);
+            tiny_font(8, 1, buffer[2]);
+            tiny_font(12, 1, buffer[3]);
+            delay(150);
+        }
+        while (button_C.isPressed())
+        {
+            if (set_date > 0)
+            {
+                set_date--;
+            }
+            else
+            {
+                set_date = 31;
             }
             //print the new value
             itoa(set_date, buffer, 10);
@@ -800,6 +893,7 @@ void month_mode()
     byte set_mnth = rtc[5];
     int set_yr = rtc[6];
 
+    cls();
     set_mnth = rtc[5];
     char buffer[5] = "    ";
     itoa(set_mnth, buffer, 10);
@@ -809,7 +903,7 @@ void month_mode()
     tiny_font(12, 1, buffer[3]);
     while (!button_A.uniquePress())
     {
-        while (button_B.isPressed())
+        while (button_D.isPressed())
         {
             if (set_mnth < 12)
             {
@@ -818,6 +912,24 @@ void month_mode()
             else
             {
                 set_mnth = 1;
+            }
+            //print the new value
+            itoa(set_mnth, buffer, 10);
+            tiny_font(0, 1, buffer[0]);
+            tiny_font(4, 1, buffer[1]);
+            tiny_font(8, 1, buffer[2]);
+            tiny_font(12, 1, buffer[3]);
+            delay(150);
+        }
+        while (button_C.isPressed())
+        {
+            if (set_mnth > 0)
+            {
+                set_mnth--;
+            }
+            else
+            {
+                set_mnth = 12;
             }
             //print the new value
             itoa(set_mnth, buffer, 10);
@@ -842,7 +954,8 @@ void year_mode()
     byte set_date = rtc[4];
     byte set_mnth = rtc[5];
     int set_yr = rtc[6];
-
+    
+    cls();
     set_yr = rtc[6];
     char buffer[5] = "    ";
     itoa(set_yr, buffer, 10);
@@ -852,11 +965,29 @@ void year_mode()
     tiny_font(12, 1, buffer[3]);
     while (!button_A.uniquePress())
     {
-        while (button_B.isPressed())
+        while (button_D.isPressed())
         {
             if (set_yr < 2099)
             {
                 set_yr++;
+            }
+            else
+            {
+                set_yr = 2000;
+            }
+            //print the new value
+            itoa(set_yr, buffer, 10);
+            tiny_font(0, 1, buffer[0]);
+            tiny_font(4, 1, buffer[1]);
+            tiny_font(8, 1, buffer[2]);
+            tiny_font(12, 1, buffer[3]);
+            delay(150);
+        }
+        while (button_C.isPressed())
+        {
+            if (set_yr > 0)
+            {
+                set_yr--;
             }
             else
             {
